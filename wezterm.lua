@@ -286,12 +286,5 @@ wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_wid
 	end
 end)
 
---[[
-============================
-Leader Active Indicator
-============================
-]]
---
-
 -- and finally, return the configuration to wezterm
 return config
