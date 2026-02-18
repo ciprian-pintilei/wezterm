@@ -1,40 +1,3 @@
--- WezTerm Keybindings Documentation by dragonlobster
--- ===================================================
--- Leader Key:
--- The leader key is set to ALT + q, with a timeout of 2000 milliseconds (2 seconds).
--- To execute any keybinding, press the leader key (ALT + q) first, then the corresponding key.
-
--- Keybindings:
--- 1. Tab Management:
---    - CTRL|ALT|CMD|SHIFT + c: Create a new tab in the current pane's domain.
---    - CTRL|ALT|CMD|SHIFT + x: Close the current pane (with confirmation).
---    - CTRL|ALT|CMD|SHIFT + b: Switch to the previous tab.
---    - CTRL|ALT|CMD|SHIFT + n: Switch to the next tab.
---    - CTRL|ALT|CMD|SHIFT + <number>: Switch to a specific tab (0–9).
-
--- 2. Pane Splitting:
---    - CTRL|ALT|CMD|SHIFT + |: Split the current pane horizontally into two panes.
---    - CTRL|ALT|CMD|SHIFT + -: Split the current pane vertically into two panes.
--- 3. Pane Navigation:
---    - CTRL|ALT|CMD|SHIFT + h: Move to the pane on the left.
---    - CTRL|ALT|CMD|SHIFT + j: Move to the pane below.
---    - CTRL|ALT|CMD|SHIFT + k: Move to the pane above.
---    - CTRL|ALT|CMD|SHIFT + l: Move to the pane on the right.
-
--- 4. Pane Resizing:
---    - CTRL|ALT|CMD|SHIFT + LeftArrow: Increase the pane size to the left by 5 units.
---    - CTRL|ALT|CMD|SHIFT + RightArrow: Increase the pane size to the right by 5 units.
---    - CTRL|ALT|CMD|SHIFT + DownArrow: Increase the pane size downward by 5 units.
---    - CTRL|ALT|CMD|SHIFT + UpArrow: Increase the pane size upward by 5 units.
-
--- 5. Status Line:
---    - The status line indicates when the leader key is active, displaying an ocean wave emoji (🌊).
-
--- Miscellaneous Configurations:
--- - Tabs are shown even if there's only one tab.
--- - The tab bar is located at the bottom of the terminal window.
--- - Tab and split indices are zero-based.
-
 -- Pull in the wezterm API
 local wezterm = require("wezterm")
 
@@ -146,77 +109,100 @@ Shortcuts
 ]]
 --
 
+local leader_str = "CTRL|ALT|CMD|SHIFT"
 -- shortcut_configuration
 config.keys = {
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
 		key = "c",
 		action = wezterm.action.SpawnTab("CurrentPaneDomain"),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
 		key = "x",
 		action = wezterm.action.CloseCurrentPane({ confirm = true }),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
-		key = "b",
+		mods = leader_str,
+		key = "p",
 		action = wezterm.action.ActivateTabRelative(-1),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
 		key = "n",
 		action = wezterm.action.ActivateTabRelative(1),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
 		key = "\\",
 		action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
 		key = "-",
 		action = wezterm.action.SplitVertical({
 			domain = "CurrentPaneDomain",
 		}),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		key = ",",
+		mods = leader_str,
+		action = wezterm.action.PromptInputLine({
+			description = "Enter new name for tab",
+			action = wezterm.action_callback(function(window, pane, line)
+				if line then
+					window:active_tab():set_title(line)
+				end
+			end),
+		}),
+	},
+	{
+		mods = leader_str,
 		key = "h",
 		action = wezterm.action.ActivatePaneDirection("Left"),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
+		key = "w",
+		action = wezterm.action.ShowTabNavigator,
+	},
+	{
+		mods = leader_str,
 		key = "j",
 		action = wezterm.action.ActivatePaneDirection("Down"),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
 		key = "k",
 		action = wezterm.action.ActivatePaneDirection("Up"),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
 		key = "l",
 		action = wezterm.action.ActivatePaneDirection("Right"),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
+		key = "f",
+		action = wezterm.action.TogglePaneZoomState,
+	},
+	{
+		mods = leader_str,
 		key = "LeftArrow",
 		action = wezterm.action.AdjustPaneSize({ "Left", 5 }),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
 		key = "RightArrow",
 		action = wezterm.action.AdjustPaneSize({ "Right", 5 }),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
 		key = "DownArrow",
 		action = wezterm.action.AdjustPaneSize({ "Down", 5 }),
 	},
 	{
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
 		key = "UpArrow",
 		action = wezterm.action.AdjustPaneSize({ "Up", 5 }),
 	},
@@ -226,7 +212,7 @@ for i = 0, 9 do
 	-- leader + number to activate that tab
 	table.insert(config.keys, {
 		key = tostring(i),
-		mods = "CTRL|ALT|CMD|SHIFT",
+		mods = leader_str,
 		action = wezterm.action.ActivateTab(i),
 	})
 end
