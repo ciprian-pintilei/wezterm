@@ -163,6 +163,11 @@ config.keys = {
 	},
 	{
 		mods = leader_str,
+		key = "[",
+		action = wezterm.action.ActivateCopyMode,
+	},
+	{
+		mods = leader_str,
 		key = "w",
 		action = wezterm.action.ShowTabNavigator,
 	},
