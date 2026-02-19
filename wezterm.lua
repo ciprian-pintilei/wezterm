@@ -1,5 +1,6 @@
 -- Pull in the wezterm API
 local wezterm = require("wezterm")
+local mux = wezterm.mux
 
 -- This table will hold the configuration.
 local config = {}
@@ -101,6 +102,9 @@ config.window_frame = {
 	border_bottom_color = colors.border,
 	border_top_color = colors.border,
 }
+
+config.pane_focus_follows_mouse = true
+config.scrollback_lines = 5000
 
 --[[
 ============================
@@ -205,7 +209,7 @@ config.keys = {
 	},
 	{
 		mods = leader_str,
-		key = "w",
+		key = "t",
 		action = wezterm.action.ShowTabNavigator,
 	},
 	{
@@ -213,16 +217,55 @@ config.keys = {
 		key = "f",
 		action = wezterm.action.TogglePaneZoomState,
 	},
+	{
+		key = "]",
+		mods = leader_str,
+		action = wezterm.action.PaneSelect({ mode = "SwapWithActiveKeepFocus" }),
+	},
+	-- Attach to muxer
+	{
+		key = "a",
+		mods = leader_str,
+		action = wezterm.action.AttachDomain("unix"),
+	},
+
+	-- Detach from muxer
+	{
+		key = "d",
+		mods = leader_str,
+		action = wezterm.action.DetachDomain({ DomainName = "unix" }),
+	},
+	{
+		key = "s",
+		mods = leader_str,
+		action = wezterm.action.ShowLauncherArgs({ flags = "WORKSPACES" }),
+	},
+	{
+		key = "W",
+		mods = "CTRL|SHIFT",
+		action = wezterm.action.PromptInputLine({
+			description = "Enter new name for session",
+			action = wezterm.action_callback(function(window, pane, line)
+				if line then
+					mux.rename_workspace(window:mux_window():get_workspace(), line)
+				end
+			end),
+		}),
+	},
 }
 
-for i = 0, 9 do
-	-- leader + number to activate that tab
-	table.insert(config.keys, {
-		key = tostring(i),
-		mods = leader_str,
-		action = wezterm.action.ActivateTab(i),
-	})
-end
+--[[
+============================
+Multiplexer
+============================
+]]
+--
+
+config.unix_domains = {
+	{
+		name = "unix",
+	},
+}
 
 --[[
 ============================
