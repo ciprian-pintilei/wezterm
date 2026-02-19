@@ -145,11 +145,13 @@ config.keys = {
 		}),
 	},
 	{
-		key = ",",
-		mods = leader_str,
+		key = "R",
+		mods = "CTRL|SHIFT",
 		action = wezterm.action.PromptInputLine({
 			description = "Enter new name for tab",
 			action = wezterm.action_callback(function(window, pane, line)
+				-- line is nil if you hit Esc, empty if you just hit Enter,
+				-- or the text you typed
 				if line then
 					window:active_tab():set_title(line)
 				end
@@ -157,9 +159,44 @@ config.keys = {
 		}),
 	},
 	{
-		mods = leader_str,
 		key = "h",
-		action = wezterm.action.ActivatePaneDirection("Left"),
+		mods = "CTRL",
+		action = wezterm.action({ EmitEvent = "move-left" }),
+	},
+	{
+		key = "j",
+		mods = "CTRL",
+		action = wezterm.action({ EmitEvent = "move-down" }),
+	},
+	{
+		key = "k",
+		mods = "CTRL",
+		action = wezterm.action({ EmitEvent = "move-up" }),
+	},
+	{
+		key = "l",
+		mods = "CTRL",
+		action = wezterm.action({ EmitEvent = "move-right" }),
+	},
+	{
+		key = "h",
+		mods = "ALT",
+		action = wezterm.action({ EmitEvent = "resize-left" }),
+	},
+	{
+		key = "j",
+		mods = "ALT",
+		action = wezterm.action({ EmitEvent = "resize-down" }),
+	},
+	{
+		key = "k",
+		mods = "ALT",
+		action = wezterm.action({ EmitEvent = "resize-up" }),
+	},
+	{
+		key = "l",
+		mods = "ALT",
+		action = wezterm.action({ EmitEvent = "resize-right" }),
 	},
 	{
 		mods = leader_str,
@@ -173,43 +210,8 @@ config.keys = {
 	},
 	{
 		mods = leader_str,
-		key = "j",
-		action = wezterm.action.ActivatePaneDirection("Down"),
-	},
-	{
-		mods = leader_str,
-		key = "k",
-		action = wezterm.action.ActivatePaneDirection("Up"),
-	},
-	{
-		mods = leader_str,
-		key = "l",
-		action = wezterm.action.ActivatePaneDirection("Right"),
-	},
-	{
-		mods = leader_str,
 		key = "f",
 		action = wezterm.action.TogglePaneZoomState,
-	},
-	{
-		mods = leader_str,
-		key = "LeftArrow",
-		action = wezterm.action.AdjustPaneSize({ "Left", 5 }),
-	},
-	{
-		mods = leader_str,
-		key = "RightArrow",
-		action = wezterm.action.AdjustPaneSize({ "Right", 5 }),
-	},
-	{
-		mods = leader_str,
-		key = "DownArrow",
-		action = wezterm.action.AdjustPaneSize({ "Down", 5 }),
-	},
-	{
-		mods = leader_str,
-		key = "UpArrow",
-		action = wezterm.action.AdjustPaneSize({ "Up", 5 }),
 	},
 }
 
@@ -275,6 +277,68 @@ wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_wid
 			{ Text = right_edge_text },
 		}
 	end
+end)
+
+local os = require("os")
+
+local move_around = function(window, pane, direction_wez, direction_nvim)
+	local result = os.execute(
+		"env NVIM_LISTEN_ADDRESS=/tmp/nvim" .. pane:pane_id() .. " wezterm.nvim.navigator " .. direction_nvim
+	)
+	if result then
+		window:perform_action(wezterm.action({ SendString = "\x17" .. direction_nvim }), pane)
+	else
+		window:perform_action(wezterm.action({ ActivatePaneDirection = direction_wez }), pane)
+	end
+end
+
+wezterm.on("move-left", function(window, pane)
+	move_around(window, pane, "Left", "h")
+end)
+
+wezterm.on("move-right", function(window, pane)
+	move_around(window, pane, "Right", "l")
+end)
+
+wezterm.on("move-up", function(window, pane)
+	move_around(window, pane, "Up", "k")
+end)
+
+wezterm.on("move-down", function(window, pane)
+	move_around(window, pane, "Down", "j")
+end)
+
+local vim_resize = function(window, pane, direction_wez, direction_nvim)
+	local result = os.execute(
+		"env NVIM_LISTEN_ADDRESS=/tmp/nvim"
+			.. pane:pane_id()
+			.. " "
+			.. wezterm.home_dir
+			.. "/bin/"
+			.. "wezterm.nvim.navigator "
+			.. direction_nvim
+	)
+	if result then
+		window:perform_action(wezterm.action({ SendString = "\x1b" .. direction_nvim }), pane)
+	else
+		window:perform_action(wezterm.action({ ActivatePaneDirection = direction_wez }), pane)
+	end
+end
+
+wezterm.on("resize-left", function(window, pane)
+	vim_resize(window, pane, "Left", "h")
+end)
+
+wezterm.on("resize-right", function(window, pane)
+	vim_resize(window, pane, "Right", "l")
+end)
+
+wezterm.on("resize-up", function(window, pane)
+	vim_resize(window, pane, "Up", "k")
+end)
+
+wezterm.on("resize-down", function(window, pane)
+	vim_resize(window, pane, "Down", "j")
 end)
 
 -- and finally, return the configuration to wezterm
