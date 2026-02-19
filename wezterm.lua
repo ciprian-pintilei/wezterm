@@ -283,7 +283,12 @@ local os = require("os")
 
 local move_around = function(window, pane, direction_wez, direction_nvim)
 	local result = os.execute(
-		"env NVIM_LISTEN_ADDRESS=/tmp/nvim" .. pane:pane_id() .. " wezterm.nvim.navigator " .. direction_nvim
+		"env NVIM_LISTEN_ADDRESS=/tmp/nvim"
+			.. pane:pane_id()
+			.. " "
+			.. wezterm.home_dir
+			.. "/go/bin/wezterm.nvim.navigator "
+			.. direction_nvim
 	)
 	if result then
 		window:perform_action(wezterm.action({ SendString = "\x17" .. direction_nvim }), pane)
@@ -308,37 +313,24 @@ wezterm.on("move-down", function(window, pane)
 	move_around(window, pane, "Down", "j")
 end)
 
-local vim_resize = function(window, pane, direction_wez, direction_nvim)
-	local result = os.execute(
-		"env NVIM_LISTEN_ADDRESS=/tmp/nvim"
-			.. pane:pane_id()
-			.. " "
-			.. wezterm.home_dir
-			.. "/bin/"
-			.. "wezterm.nvim.navigator "
-			.. direction_nvim
-	)
-	if result then
-		window:perform_action(wezterm.action({ SendString = "\x1b" .. direction_nvim }), pane)
-	else
-		window:perform_action(wezterm.action({ ActivatePaneDirection = direction_wez }), pane)
-	end
+local vim_resize = function(window, pane, direction_wez)
+	window:perform_action(wezterm.action({ AdjustPaneSize = { direction_wez, 5 } }), pane)
 end
 
 wezterm.on("resize-left", function(window, pane)
-	vim_resize(window, pane, "Left", "h")
+	vim_resize(window, pane, "Left")
 end)
 
 wezterm.on("resize-right", function(window, pane)
-	vim_resize(window, pane, "Right", "l")
+	vim_resize(window, pane, "Right")
 end)
 
 wezterm.on("resize-up", function(window, pane)
-	vim_resize(window, pane, "Up", "k")
+	vim_resize(window, pane, "Up")
 end)
 
 wezterm.on("resize-down", function(window, pane)
-	vim_resize(window, pane, "Down", "j")
+	vim_resize(window, pane, "Down")
 end)
 
 -- and finally, return the configuration to wezterm
