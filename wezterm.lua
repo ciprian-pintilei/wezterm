@@ -103,7 +103,6 @@ config.window_frame = {
 	border_top_color = colors.border,
 }
 
-config.pane_focus_follows_mouse = true
 config.scrollback_lines = 5000
 
 --[[
@@ -115,6 +114,7 @@ Session management
 
 local session_manager = require("wezterm-session-manager/session-manager")
 wezterm.on("save_session", function(window)
+	wezterm.log_info("Save session triggered")
 	session_manager.save_state(window)
 end)
 wezterm.on("load_session", function(window)
@@ -274,12 +274,12 @@ config.keys = {
 	-- Session manager
 	{
 		key = "s",
-		mods = leader_str,
+		mods = "CTRL|SHIFT",
 		action = wezterm.action({ EmitEvent = "save_session" }),
 	},
 	{
 		key = "l",
-		mods = leader_str,
+		mods = "CTRL|SHIFT",
 		action = wezterm.action({ EmitEvent = "load_session" }),
 	},
 	{
