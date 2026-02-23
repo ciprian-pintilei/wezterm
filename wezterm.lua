@@ -5,6 +5,8 @@ local mux = wezterm.mux
 -- This table will hold the configuration.
 local config = {}
 
+local merge = require("merge")
+
 -- In newer versions of wezterm, use the config_builder which will
 -- help provide clearer error messages
 if wezterm.config_builder then
@@ -105,24 +107,7 @@ config.window_frame = {
 
 config.scrollback_lines = 5000
 
---[[
-============================
-Session management
-============================
-]]
---
-
-local session_manager = require("wezterm-session-manager/session-manager")
-wezterm.on("save_session", function(window)
-	wezterm.log_info("Save session triggered")
-	session_manager.save_state(window)
-end)
-wezterm.on("load_session", function(window)
-	session_manager.load_state(window)
-end)
-wezterm.on("restore_session", function(window)
-	session_manager.restore_state(window)
-end)
+local resurrect = require("resurrect/config")
 
 --[[
 ============================
@@ -167,8 +152,7 @@ config.keys = {
 		}),
 	},
 	{
-		key = "R",
-		mods = "CTRL|SHIFT",
+		key = "F2",
 		action = wezterm.action.PromptInputLine({
 			description = "Enter new name for tab",
 			action = wezterm.action_callback(function(window, pane, line)
@@ -259,8 +243,7 @@ config.keys = {
 		action = wezterm.action.ShowLauncherArgs({ flags = "WORKSPACES" }),
 	},
 	{
-		key = "W",
-		mods = "CTRL|SHIFT",
+		key = "F3",
 		action = wezterm.action.PromptInputLine({
 			description = "Enter new name for session",
 			action = wezterm.action_callback(function(window, pane, line)
@@ -269,23 +252,6 @@ config.keys = {
 				end
 			end),
 		}),
-	},
-
-	-- Session manager
-	{
-		key = "s",
-		mods = "CTRL|SHIFT",
-		action = wezterm.action({ EmitEvent = "save_session" }),
-	},
-	{
-		key = "l",
-		mods = "CTRL|SHIFT",
-		action = wezterm.action({ EmitEvent = "load_session" }),
-	},
-	{
-		key = "r",
-		mods = leader_str,
-		action = wezterm.action({ EmitEvent = "restore_session" }),
 	},
 }
 
@@ -301,6 +267,15 @@ config.unix_domains = {
 		name = "unix",
 	},
 }
+
+--[[
+============================
+Session management
+============================
+]]
+--
+
+config.keys = merge.all(config.keys, resurrect.keys)
 
 --[[
 ============================
@@ -360,17 +335,19 @@ end)
 local os = require("os")
 
 local move_around = function(window, pane, direction_wez, direction_nvim)
-	local result = os.execute(
-		"env NVIM_LISTEN_ADDRESS=/tmp/nvim"
-			.. pane:pane_id()
-			.. " "
-			.. wezterm.home_dir
-			.. "/go/bin/wezterm.nvim.navigator "
-			.. direction_nvim
-	)
+	command = "env NVIM_LISTEN_ADDRESS=/tmp/nvim"
+		.. pane:pane_id()
+		.. " "
+		.. "~/go/bin/wezterm.nvim.navigator "
+		.. direction_nvim
+	wezterm.log_info("Command: " .. command)
+	local result = os.execute(command)
+	wezterm.log_info("Result" .. tostring(result))
 	if result then
+		-- nvim is running, send navigation keys to nvim
 		window:perform_action(wezterm.action({ SendString = "\x17" .. direction_nvim }), pane)
 	else
+		-- nvim not running, move wezterm pane
 		window:perform_action(wezterm.action({ ActivatePaneDirection = direction_wez }), pane)
 	end
 end
