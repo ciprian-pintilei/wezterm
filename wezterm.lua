@@ -335,19 +335,10 @@ end)
 local os = require("os")
 
 local move_around = function(window, pane, direction_wez, direction_nvim)
-	command = "env NVIM_LISTEN_ADDRESS=/tmp/nvim"
-		.. pane:pane_id()
-		.. " "
-		.. "~/go/bin/wezterm.nvim.navigator "
-		.. direction_nvim
-	wezterm.log_info("Command: " .. command)
-	local result = os.execute(command)
-	wezterm.log_info("Result" .. tostring(result))
+	local result = os.execute("~/go/bin/wezterm.nvim.navigator " .. direction_nvim .. " " .. pane:pane_id())
 	if result then
-		-- nvim is running, send navigation keys to nvim
 		window:perform_action(wezterm.action({ SendString = "\x17" .. direction_nvim }), pane)
 	else
-		-- nvim not running, move wezterm pane
 		window:perform_action(wezterm.action({ ActivatePaneDirection = direction_wez }), pane)
 	end
 end
